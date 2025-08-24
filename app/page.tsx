@@ -6,6 +6,7 @@ import { db } from "@/config/firebase";
 import { useEffect, useState } from "react";
 import Posts from "@/components/Posts";
 import CategoryList from "@/components/GameList";
+import { useSession } from "next-auth/react";
 
 export type PostTypes = {
   id: string;
@@ -29,13 +30,17 @@ export type PostTypes = {
 };
 
 export default function Home() {
+  const { data: session } = useSession();
   const [posts, setPosts] = useState<PostTypes[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
 
-  // Fetch posts from Firestore
+  // Fetch posts from Firestore only if user is logged in
   const getPostData = async () => {
+    if (!session?.user?.email) return;
+
+    setLoading(true);
     try {
       const querySnapshot = await getDocs(collection(db, "posts"));
       const fetchedPosts: PostTypes[] = querySnapshot.docs.map((doc) => {
@@ -50,8 +55,10 @@ export default function Home() {
   };
 
   useEffect(() => {
-    getPostData();
-  }, []);
+    if (session?.user?.email) {
+      getPostData();
+    }
+  }, [session?.user?.email]);
 
   // Filter posts based on search text AND category
   const filteredPosts = posts.filter((post) => {

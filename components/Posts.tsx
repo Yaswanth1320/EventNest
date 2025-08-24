@@ -13,7 +13,6 @@ type PostsProps = {
 
 const Posts = ({ posts, loading }: PostsProps) => {
   const { data: session, status } = useSession();
-  console.log(posts)
 
   if (status === "loading") {
     return (
